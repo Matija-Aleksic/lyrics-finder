@@ -66,7 +66,7 @@ def scan_folder(folder_path):
                 title = metadata["title"]
                 lyrics = get_lyrics(artist, title)
                 if lyrics:
-                    """todo dodat ovje da spremi lyrics"""
+                    """todo dodat ovj da spremi lyrics"""
                     print(lyrics)
                 else:
                     print("Lyrics not found")
