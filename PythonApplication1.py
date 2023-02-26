@@ -1,5 +1,6 @@
 import os
 import requests
+import pyperclip
 from mutagen.easyid3 import EasyID3
 from mutagen.flac import FLAC
 from mutagen.oggvorbis import OggVorbis
@@ -44,8 +45,29 @@ def get_lyrics(artist, title):
         soup = BeautifulSoup(response.content, "html.parser")
         lyrics_div = soup.find("div", {"jsname": "WbKHeb"})
         if lyrics_div:
-            lyrics = lyrics_div.text.strip()
-            return lyrics
+            
+            lyrics_text = lyrics_div.get_text(strip=True)
+            lyrics_text = " ".join(lyrics_text.split())
+
+            # Split the text into lines based on the separator '.,'
+            lines = lyrics_text.split('.,')
+
+            # Strip any whitespace from each line
+            lines = [line.strip() for line in lines]
+
+            # Add a newline before every word that starts with a capital letter
+            new_lines = []
+            for line in lines:
+                new_line = ""
+                for i in range(len(line)):
+                    if i > 0 and line[i].isupper() and line[i-1].islower():
+                        new_line += "\n"
+                    new_line += line[i]
+                new_lines.append(new_line)
+
+            # Join the lines with newline characters
+            formatted_lyrics = '\n'.join(new_lines)
+            return formatted_lyrics
     return None
 
 
@@ -67,8 +89,10 @@ def scan_folder(folder_path):
                 lyrics = get_lyrics(artist, title)
                 if lyrics:
                     """todo dodat ovj da spremi lyrics"""
+
                     print(lyrics)
+                    pyperclip.copy(lyrics)
                 else:
                     print("Lyrics not found")
 
-scan_folder(os.path.expanduser("D:\pjesmee\Cannibal Corpse"))
+scan_folder(os.path.expanduser("D:\pjesmee\Azra"))
