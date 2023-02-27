@@ -109,11 +109,15 @@ def scan_folder(folder_path):
                         """os.system("Mp3tag.exe /s \"" + filepath + "\" /ifv2 /xl /add UNSYNCEDLYRICS=\"" + lyrics + "\"")"""
                 
                     elif filename.endswith(".flac"):
-                        lyrics = lyrics.replace("\n", "\n\n")
-                        # Use Mutagen to add the lyrics to the FLAC file
-                        audio = mutagen.File(filepath)
-                        audio["UNSYNCEDLYRICS"] = lyrics
-                        audio.save()
+                        filepath2 = os.path.join(dirpath, filename)
+                        f = music_tag.load_file(filepath2)
+                        f['lyrics']=lyrics
+                        f.save()
+                        #lyrics = lyrics.replace("\n", "\n\n")
+                        ## Use Mutagen to add the lyrics to the FLAC file
+                        #audio = mutagen.File(filepath)
+                        #audio["UNSYNCEDLYRICS"] = lyrics
+                        #audio.save()
                     print(lyrics)
                     pyperclip.copy(lyrics)
                 else:
@@ -121,5 +125,5 @@ def scan_folder(folder_path):
                     print("Lyrics not found")
 
 
-scan_folder(os.path.expanduser("D:\pjesmee\joji"))
+scan_folder(os.path.expanduser("D:\pjesmee\slayer"))
 print(unfound)
