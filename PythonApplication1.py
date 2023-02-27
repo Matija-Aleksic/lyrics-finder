@@ -1,13 +1,19 @@
 import os
 import requests
+import mutagen
+import re
 import pyperclip
 from mutagen.easyid3 import EasyID3
 from mutagen.flac import FLAC
 from mutagen.oggvorbis import OggVorbis
 from bs4 import BeautifulSoup
+from mutagen import File
+from mutagen.flac import Picture
+from mutagen.id3 import ID3, USLT
+import music_tag
 
 
-
+unfound = 0;
 def get_metadata(filepath):
     """Extracts artist and song metadata from an audio file."""
     _, ext = os.path.splitext(filepath)
@@ -60,7 +66,7 @@ def get_lyrics(artist, title):
             for line in lines:
                 new_line = ""
                 for i in range(len(line)):
-                    if i > 0 and line[i].isupper() and line[i-1].islower():
+                    if i > 0 and line[i].isupper():
                         new_line += "\n"
                     new_line += line[i]
                 new_lines.append(new_line)
@@ -78,6 +84,7 @@ def scan_folder(folder_path):
     """Scans a folder and its subfolders for audio files, extracts metadata, and adds lyrics if found."""
     for dirpath, _, filenames in os.walk(folder_path):
         for filename in filenames:
+
             filepath = os.path.join(dirpath, filename)
             metadata = get_metadata(filepath)
             print("test2")
@@ -88,11 +95,31 @@ def scan_folder(folder_path):
                 title = metadata["title"]
                 lyrics = get_lyrics(artist, title)
                 if lyrics:
-                    """todo dodat ovj da spremi lyrics"""
-
+                    """dodat lyrics preko mp3tag"""
+                    if filename.endswith(".mp3"):
+                        filepath1 = os.path.join(dirpath, filename)
+                        f = music_tag.load_file(filepath1)
+                        f['lyrics']=lyrics
+                        f.save()
+                        #lyrics = lyrics.replace("\n", "\n\n")
+                        #audio = mutagen.File(filepath)
+                        #audio["UNSYNCEDLYRICS"] = lyrics
+                        #audio.save()
+                        # Use MP3Tag command line interface to add the lyrics to the music file
+                        """os.system("Mp3tag.exe /s \"" + filepath + "\" /ifv2 /xl /add UNSYNCEDLYRICS=\"" + lyrics + "\"")"""
+                
+                    elif filename.endswith(".flac"):
+                        lyrics = lyrics.replace("\n", "\n\n")
+                        # Use Mutagen to add the lyrics to the FLAC file
+                        audio = mutagen.File(filepath)
+                        audio["UNSYNCEDLYRICS"] = lyrics
+                        audio.save()
                     print(lyrics)
                     pyperclip.copy(lyrics)
                 else:
+                    unfound=+1
                     print("Lyrics not found")
 
-scan_folder(os.path.expanduser("D:\pjesmee\Azra"))
+
+scan_folder(os.path.expanduser("D:\pjesmee\joji"))
+print(unfound)
