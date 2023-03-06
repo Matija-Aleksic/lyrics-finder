@@ -69,22 +69,27 @@ def scan_folder(folder_path):
     for dirpath, _, filenames in os.walk(folder_path):
         for filename in filenames:
             filepath = os.path.join(dirpath, filename)
-            metadata = get_metadata(filepath)
-            if metadata:
-                print(filepath)
-                print(metadata)
-                artist = metadata["artist"]
-                title = metadata["title"]
-                lyrics = get_lyrics(artist, title)
-                if lyrics:
-                    filepath1 = os.path.join(dirpath, filename)
-                    f = music_tag.load_file(filepath1)
-                    f['lyrics']=lyrics
-                    f.save()
-                    print(lyrics)
-                    pyperclip.copy(lyrics)
-                else:
-                    print("Lyrics not found")
+            #metadata = get_metadata(filepath)
+            f = music_tag.load_file(filepath)
+            del f['lyrics']
+            f.remove_tag('lyrics')
+            f.save()
+            print("brisanje")
+            #if metadata:
+            #    print(filepath)
+            #    print(metadata)
+            #    artist = metadata["artist"]
+            #    title = metadata["title"]
+            #    lyrics = get_lyrics(artist, title)
+            #    if lyrics:
+            #        filepath1 = os.path.join(dirpath, filename)
+            #        f = music_tag.load_file(filepath1)
+            #        f['lyrics']=lyrics
+            #        f.save()
+            #        print(lyrics)
+            #        pyperclip.copy(lyrics)
+            #    else:
+            #        print("Lyrics not found")
 
-scan_folder(os.path.expanduser("MUSIC_FOLDER"))
+scan_folder(os.path.expanduser("D:\pjesmee\Azra"))
 #after around 900 songs ip will get blocked for too much scraping
