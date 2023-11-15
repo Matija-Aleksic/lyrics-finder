@@ -8,26 +8,33 @@ from mutagen.flac import FLAC
 from mutagen.oggvorbis import OggVorbis
 from bs4 import BeautifulSoup
 import music_tag
+import tkinter as tk
+from tkinter import filedialog
 
 def get_metadata(filepath):
-
-    _, ext = os.path.splitext(filepath)
-    if ext == ".mp3":
-        audio = EasyID3(filepath)
-        artist = audio.get("artist", [""])[0]
-        title = audio.get("title", [""])[0]
-    elif ext == ".flac":
-        audio = FLAC(filepath)
-        artist = audio.get("artist", [""])[0]
-        title = audio.get("title", [""])[0]
-    elif ext == ".ogg":
-        audio = OggVorbis(filepath)
-        artist = audio.get("artist", [""])[0]
-        title = audio.get("title", [""])[0]
-    else:
-        # unsupported file format
+    try:
+        _, ext = os.path.splitext(filepath)
+        if ext == ".mp3":
+            audio = EasyID3(filepath)
+            artist = audio.get("artist", [""])[0]
+            title = audio.get("title", [""])[0]
+        elif ext == ".flac":
+            audio = FLAC(filepath)
+            artist = audio.get("artist", [""])[0]
+            title = audio.get("title", [""])[0]
+        elif ext == ".ogg":
+            audio = OggVorbis(filepath)
+            artist = audio.get("artist", [""])[0]
+            title = audio.get("title", [""])[0]
+        else:
+            # unsupported file format
+            return None
+        return {"artist": artist, "title": title}
+    except NotImplementedError as e:
+        print(f"Error processing file: {filepath}")
+        print(f"Error details: {e}")
         return None
-    return {"artist": artist, "title": title}
+
 
 def get_lyrics(artist, title):
 
@@ -65,31 +72,30 @@ def get_lyrics(artist, title):
     return None
 
 def scan_folder(folder_path):
-
     for dirpath, _, filenames in os.walk(folder_path):
         for filename in filenames:
             filepath = os.path.join(dirpath, filename)
-            #metadata = get_metadata(filepath)
-            f = music_tag.load_file(filepath)
-            del f['lyrics']
-            f.remove_tag('lyrics')
-            f.save()
-            print("brisanje")
-            #if metadata:
-            #    print(filepath)
-            #    print(metadata)
-            #    artist = metadata["artist"]
-            #    title = metadata["title"]
-            #    lyrics = get_lyrics(artist, title)
-            #    if lyrics:
-            #        filepath1 = os.path.join(dirpath, filename)
-            #        f = music_tag.load_file(filepath1)
-            #        f['lyrics']=lyrics
-            #        f.save()
-            #        print(lyrics)
-            #        pyperclip.copy(lyrics)
-            #    else:
-            #        print("Lyrics not found")
+            metadata = get_metadata(filepath)
+            if metadata:
+                #print(filepath)
+                print(metadata)
+                artist = metadata["artist"]
+                title = metadata["title"]
+                lyrics = get_lyrics(artist, title)
+                if lyrics:
+                    filepath1 = os.path.join(dirpath, filename)
+                    f = music_tag.load_file(filepath1)
+                    f['lyrics']=lyrics
+                    f.save()
+                    print(lyrics)
+                    pyperclip.copy(lyrics)
+                else:
+                    print(" ")
+                    print("Lyrics not found")
+                    print(" ")
 
-scan_folder(os.path.expanduser("D:\pjesmee\Azra"))
-#after around 900 songs ip will get blocked for too much scraping
+root = tk.Tk()
+root.withdraw()
+file_path = filedialog.askdirectory()
+
+scan_folder(file_path)
