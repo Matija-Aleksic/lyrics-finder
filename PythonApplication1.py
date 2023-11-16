@@ -73,6 +73,17 @@ def delete_lyrics(filepath):
     except Exception as e:
         print(f"Error deleting lyrics: {e}")
 
+
+def add_lyrics(filepath, lyrics):
+    try:
+        f = music_tag.load_file(filepath)
+        f['lyrics'] = lyrics
+        f.save()
+        print("Lyrics added successfully.")
+    except Exception as e:
+        print(f"Error adding lyrics: {e}")       
+
+
 def custom_dialog_yes_no(title, prompt):
     root = tk.Tk()
     root.withdraw()
@@ -92,31 +103,24 @@ def scan_folder(folder_path, action_choice):
                 artist = metadata["artist"]
                 title = metadata["title"]
 
-                if action_choice == "Find Lyrics":
+                if action_choice == "yes":
                     lyrics = get_lyrics(artist, title)
                     if lyrics:
-                        f = music_tag.load_file(filepath)
-                        f['lyrics'] = lyrics
-                        f.save()
-                        print(lyrics)
-                        pyperclip.copy(lyrics)
+                        delete_lyrics(filepath)
+                        add_lyrics(filepath,lyrics)
                     else:
                         print("Lyrics not found.")
-                elif action_choice == "Delete Lyrics":
-                    delete_lyrics(filepath)
+                elif action_choice == "no":
+                    add_lyrics(filepath,lyrics)
                 else:
                     print("Invalid choice.")
 
-# Ask user whether to find or delete lyrics for the entire folder
-answer = custom_dialog_yes_no("Lyrics Action", "Do you want to find the lyrics? (pressing no will delete them)")
-
+folder_path = filedialog.askdirectory()
+answer = custom_dialog_yes_no("Lyrics Action", "Do you want to delete the old lyrics first?")
 if answer:
-    root = tk.Tk()
-    root.withdraw()
-    folder_path = filedialog.askdirectory()
-
-    # Call the function to scan the folder with the chosen action
-    action_choice = "Find Lyrics" if answer else "Delete Lyrics"
+    action_choice = "yes"
     scan_folder(folder_path, action_choice)
 else:
-    print("User chose not to proceed.")
+    action_choice = "no"
+    scan_folder(folder_path, action_choice)
+
