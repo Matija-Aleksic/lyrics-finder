@@ -6,8 +6,11 @@ from tkinter import filedialog, simpledialog, messagebox
 from mutagen.easyid3 import EasyID3
 from mutagen.flac import FLAC
 from mutagen.oggvorbis import OggVorbis
+from mutagen.id3 import ID3, ID3NoHeaderError 
 from bs4 import BeautifulSoup
 import pyperclip
+import eyed3
+
 
 def get_metadata(filepath):
     try:
@@ -16,13 +19,16 @@ def get_metadata(filepath):
             audio = EasyID3(filepath) if ext == ".mp3" else FLAC(filepath) if ext == ".flac" else OggVorbis(filepath)
             artist = audio.get("artist", [""])[0]
             title = audio.get("title", [""])[0]
-            return {"artist": artist, "title": title}
+            mp3_file = eyed3.load(filepath)
+            old_lyrics = mp3_file.tag.frame_set.get(b'USLT')
+            return {"artist": artist, "title": title, "old_lyrics": old_lyrics is not None}
         else:
             return None
-    except NotImplementedError as e:
+    except (ID3NoHeaderError, NotImplementedError) as e:
         print(f"Error processing file: {filepath}")
         print(f"Error details: {e}")
-        return None
+        return None 
+
 
 def get_lyrics(artist, title):
     base_url = "https://api.genius.com"
@@ -46,7 +52,6 @@ def get_lyrics(artist, title):
             soup = BeautifulSoup(lyrics_response.text, "html.parser")
             lyrics_container = soup.find("div", class_="Lyrics__Container-sc-1ynbvzw-1 kUgSbL")
 
-            # Get the text content of the lyrics container
             lyrics_text = lyrics_container.get_text(separator='\n')
 
             print("Lyrics found:")
@@ -102,16 +107,21 @@ def scan_folder(folder_path, action_choice):
                 print(metadata)
                 artist = metadata["artist"]
                 title = metadata["title"]
+                old_lyrics = metadata.get("old_lyrics")  
 
                 if action_choice == "yes":
                     lyrics = get_lyrics(artist, title)
                     if lyrics:
                         delete_lyrics(filepath)
-                        add_lyrics(filepath,lyrics)
+                        add_lyrics(filepath, lyrics)
                     else:
-                        print("Lyrics not found.")
+                        print("New lyrics not found. Old lyrics preserved.")
                 elif action_choice == "no":
-                    add_lyrics(filepath,lyrics)
+                    if old_lyrics:
+                        print("Old lyrics exist, skipping")
+                    else:
+                        lyrics = get_lyrics(artist, title)
+                        add_lyrics(filepath, lyrics)
                 else:
                     print("Invalid choice.")
 
