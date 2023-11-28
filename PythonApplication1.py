@@ -15,23 +15,30 @@ import eyed3
 def get_metadata(filepath):
     try:
         _, ext = os.path.splitext(filepath)
-        if ext == ".mp3" or ext == ".flac" or ext == ".ogg":
-            audio = EasyID3(filepath) if ext == ".mp3" else FLAC(filepath) if ext == ".flac" else OggVorbis(filepath)
+        if ext == ".mp3":
+            audio = EasyID3(filepath)
             artist = audio.get("artist", [""])[0]
             title = audio.get("title", [""])[0]
             mp3_file = eyed3.load(filepath)
             if mp3_file is not None and mp3_file.tag is not None:
-                old_lyrics = mp3_file.tag.frame_set.get(b'USLT')
+                old_lyrics_frame = mp3_file.tag.frame_set.get(b'USLT')
+                old_lyrics = [frame.text for frame in old_lyrics_frame] if old_lyrics_frame is not None else None
             else:
                 print("No tag information found for", filepath)
                 old_lyrics = None
-            return {"artist": artist, "title": title, "old_lyrics": old_lyrics is not None}
+        elif ext == ".flac":
+            audio = FLAC(filepath)
+            artist = audio.get("artist", [""])[0]
+            title = audio.get("title", [""])[0]
+            old_lyrics = audio.tags.get("LYRICS", [])[0] if audio.tags is not None else None
         else:
             return None
+
+        return {"artist": artist, "title": title, "old_lyrics": old_lyrics is not None}
     except (ID3NoHeaderError, NotImplementedError) as e:
         print(f"Error processing file: {filepath}")
         print(f"Error details: {e}")
-        return None 
+        return None
 
 
 def get_lyrics(artist, title):
@@ -66,7 +73,6 @@ def get_lyrics(artist, title):
 
             return formatted_lyrics.strip()
 
-
     except requests.exceptions.RequestException as err:
         print("Something went wrong:", err)
 
@@ -92,7 +98,6 @@ def add_lyrics(filepath, lyrics):
     except Exception as e:
         print(f"Error adding lyrics: {e}")       
 
-
 def custom_dialog_yes_no(title, prompt):
     root = tk.Tk()
     root.withdraw()
@@ -111,7 +116,7 @@ def scan_folder(folder_path, action_choice):
                 print(metadata)
                 artist = metadata["artist"]
                 title = metadata["title"]
-                old_lyrics = metadata.get("old_lyrics")  
+                old_lyrics = metadata.get("old_lyrics")
 
                 if action_choice == "yes":
                     lyrics = get_lyrics(artist, title)
