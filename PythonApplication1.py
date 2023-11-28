@@ -30,7 +30,8 @@ def get_metadata(filepath):
             audio = FLAC(filepath)
             artist = audio.get("artist", [""])[0]
             title = audio.get("title", [""])[0]
-            old_lyrics = audio.tags.get("LYRICS", [])[0] if audio.tags is not None else None
+            old_lyrics = audio.tags.get("LYRICS", [])
+            old_lyrics = old_lyrics[0] if old_lyrics else None
         else:
             return None
 
@@ -59,24 +60,34 @@ def get_lyrics(artist, title):
 
             lyrics_response = requests.get(song_url)
             lyrics_response.raise_for_status()
-            
+
             soup = BeautifulSoup(lyrics_response.text, "html.parser")
-            lyrics_container = soup.find("div", class_="Lyrics__Container-sc-1ynbvzw-1 kUgSbL")
 
-            lyrics_text = lyrics_container.get_text(separator='\n')
+            # Try different class names or structures based on your observation of the Genius website
+            possible_containers = [
+                soup.find("div", class_="Lyrics__Container-sc-1ynbvzw-1 kUgSbL"),
+                soup.find("div", class_="lyrics"),
+                soup.find("div", class_="lyricsContainer"),
+            ]
 
-            print("Lyrics found:")
-            print(lyrics_text)
+            lyrics_container = next((container for container in possible_containers if container), None)
 
-            formatted_lyrics = lyrics_text.replace('[', '\n[')
-            formatted_lyrics = formatted_lyrics.replace(']', ']\n')
+            if lyrics_container:
+                lyrics_text = lyrics_container.get_text(separator='\n')
 
-            return formatted_lyrics.strip()
+                print("Lyrics found:")
+                print(lyrics_text)
+
+                formatted_lyrics = lyrics_text.replace('[', '\n[')
+                formatted_lyrics = formatted_lyrics.replace(']', ']\n')
+
+                return formatted_lyrics.strip()
 
     except requests.exceptions.RequestException as err:
         print("Something went wrong:", err)
 
     return None
+
 
 def delete_lyrics(filepath):
     try:
@@ -96,7 +107,8 @@ def add_lyrics(filepath, lyrics):
         f.save()
         print("Lyrics added successfully.")
     except Exception as e:
-        print(f"Error adding lyrics: {e}")       
+        print(f"Error adding lyrics: {e}")
+
 
 def custom_dialog_yes_no(title, prompt):
     root = tk.Tk()
@@ -105,6 +117,7 @@ def custom_dialog_yes_no(title, prompt):
     result = messagebox.askyesno(title, prompt)
 
     return result
+
 
 def scan_folder(folder_path, action_choice):
     for dirpath, _, filenames in os.walk(folder_path):
@@ -133,6 +146,7 @@ def scan_folder(folder_path, action_choice):
                         add_lyrics(filepath, lyrics)
                 else:
                     print("Invalid choice.")
+
 
 folder_path = filedialog.askdirectory()
 answer = custom_dialog_yes_no("Lyrics Action", "Do you want to delete the old lyrics first?")
