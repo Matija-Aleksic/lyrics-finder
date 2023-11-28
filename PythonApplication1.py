@@ -10,6 +10,8 @@ from mutagen.id3 import ID3, ID3NoHeaderError
 from bs4 import BeautifulSoup
 import pyperclip
 import eyed3
+import time
+import random
 
 
 def get_metadata(filepath):
@@ -58,19 +60,14 @@ def get_lyrics(artist, title):
             song_url = results[0]["result"]["url"]
             print("Genius URL:", song_url)
 
+            random_delay = random.uniform(0, 4)
+            time.sleep(random_delay)
+
             lyrics_response = requests.get(song_url)
             lyrics_response.raise_for_status()
-
+            
             soup = BeautifulSoup(lyrics_response.text, "html.parser")
-
-            # Try different class names or structures based on your observation of the Genius website
-            possible_containers = [
-                soup.find("div", class_="Lyrics__Container-sc-1ynbvzw-1 kUgSbL"),
-                soup.find("div", class_="lyrics"),
-                soup.find("div", class_="lyricsContainer"),
-            ]
-
-            lyrics_container = next((container for container in possible_containers if container), None)
+            lyrics_container = soup.find("div", class_="Lyrics__Container-sc-1ynbvzw-1 kUgSbL")
 
             if lyrics_container:
                 lyrics_text = lyrics_container.get_text(separator='\n')
