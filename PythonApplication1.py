@@ -2,11 +2,11 @@ import os
 import requests
 import music_tag
 import tkinter as tk
-from tkinter import filedialog, simpledialog, messagebox
+from tkinter import filedialog, messagebox
 from mutagen.easyid3 import EasyID3
 from mutagen.flac import FLAC
 from mutagen.oggvorbis import OggVorbis
-from mutagen.id3 import ID3, ID3NoHeaderError 
+from mutagen.id3 import ID3, ID3NoHeaderError
 from bs4 import BeautifulSoup
 import pyperclip
 import eyed3
@@ -20,7 +20,11 @@ def get_metadata(filepath):
             artist = audio.get("artist", [""])[0]
             title = audio.get("title", [""])[0]
             mp3_file = eyed3.load(filepath)
-            old_lyrics = mp3_file.tag.frame_set.get(b'USLT')
+            if mp3_file is not None and mp3_file.tag is not None:
+                old_lyrics = mp3_file.tag.frame_set.get(b'USLT')
+            else:
+                print("No tag information found for", filepath)
+                old_lyrics = None
             return {"artist": artist, "title": title, "old_lyrics": old_lyrics is not None}
         else:
             return None
@@ -133,4 +137,3 @@ if answer:
 else:
     action_choice = "no"
     scan_folder(folder_path, action_choice)
-
