@@ -67,7 +67,7 @@ def get_lyrics(artist, title):
             lyrics_response.raise_for_status()
             
             soup = BeautifulSoup(lyrics_response.text, "html.parser")
-            lyrics_container = soup.find("div", class_="Lyrics__Container-sc-1ynbvzw-1 kUgSbL")
+            lyrics_container = soup.find("div", class_="Lyrics-sc-1bcc94c6-1 bzTABU")
 
             if lyrics_container:
                 lyrics_text = lyrics_container.get_text(separator='\n')
