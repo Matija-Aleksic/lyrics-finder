@@ -12,7 +12,9 @@ import pyperclip
 import eyed3
 import time
 import random
+from dotenv import load_dotenv
 
+load_dotenv()
 
 def get_metadata(filepath):
     try:
@@ -47,7 +49,12 @@ def get_metadata(filepath):
 def get_lyrics(artist, title):
     base_url = "https://api.genius.com"
     search_url = "/search"
-    headers = {"Authorization": "Bearer IZH7cNut75QpRsXf9Pyqnf-WBSCDmJKldwQjfvzLifboY6mIVRnBMiQIeJs21vQ6"}
+
+    GENIUS_API_KEY = os.getenv("GENIUS_API_KEY")
+    if not GENIUS_API_KEY:
+        raise ValueError("Genius API key not found. Set GENIUS_API_KEY environment variable.")
+    
+    headers = {"Authorization": f"Bearer {GENIUS_API_KEY}"}
     query = f"{artist} {title}"
     params = {"q": query}
 
@@ -143,7 +150,6 @@ def scan_folder(folder_path, action_choice):
                         add_lyrics(filepath, lyrics)
                 else:
                     print("Invalid choice.")
-
 
 folder_path = filedialog.askdirectory()
 answer = custom_dialog_yes_no("Lyrics Action", "Do you want to delete the old lyrics first?")
