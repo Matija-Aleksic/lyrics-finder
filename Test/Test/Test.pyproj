@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>475f8550-cc51-4917-8935-b9e3cdf88c5e</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>Test.py</StartupFile>
+    <StartupFile>LyricsFinder.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -22,7 +22,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Flask.py" />
-    <Compile Include="Test.py" />
+    <Compile Include="LyricsFinder.py" />
     <Compile Include="lyric_finder_utilities.py" />
   </ItemGroup>
   <ItemGroup>

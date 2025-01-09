@@ -81,9 +81,19 @@
         function appendToCmdOutput(message) {
             const newMessage = document.createElement('div');
             newMessage.textContent = message;
+            const cmdOutput = document.getElementById('cmdOutput');
             cmdOutput.appendChild(newMessage);
             cmdOutput.scrollTop = cmdOutput.scrollHeight;
         }
+
+        /*fetch('/get_message')
+            .then(response => response.json())
+            .then(data => {
+                appendToCmdOutput(data.message);
+            })
+            .catch(error => {
+                console.error("Error fetching message:", error);
+            });*/
 
         folderInput.addEventListener('change', () => {
             if (folderInput.files.length > 0) {
@@ -109,7 +119,7 @@
             }
             if (selectedFolder && actionChoice) 
             {
-                fetch('/process_files', 
+                await fetch('/process_files', 
                 {
                     method: 'POST',
                     body: new URLSearchParams(
@@ -125,6 +135,15 @@
                 .catch(error => {
                     console.error("Error:", error);
                 });
+
+                await fetch('/get_message')
+                .then(response => response.json())
+                .then(data => {
+                    appendToCmdOutput(data.message);
+                })
+            .catch(error => {
+                console.error("Error fetching message:", error);
+            });
             } 
         });
     </script>
