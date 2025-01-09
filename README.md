@@ -10,6 +10,7 @@ This Python script allows you to scan a folder of music files, retrieve song lyr
 - Delete old lyrics and replace them with new ones (optional).
 - A simple graphical interface to choose actions (delete existing lyrics or add new ones).
 - Supports adding and removing lyrics in both MP3 and FLAC files.
+- Now with a simple webapp interface!
 
 ## Requirements
 
@@ -27,7 +28,7 @@ This Python script allows you to scan a folder of music files, retrieve song lyr
 You can install the necessary libraries with the following command:
 
 ```bash
-pip install requests music-tag mutagen beautifulsoup4 pyperclip eyed3 python-dotenv
+pip install requests music-tag mutagen beautifulsoup4 pyperclip eyed3 python-dotenv flask
 ```
 
 
@@ -61,8 +62,9 @@ $env:GENIUS_API_KEY="your_genius_api_key"
 
 ## Usage
 
-1. **Scan Folder:** When prompted, select the folder containing the music files you want to process.
-2. **Delete Old Lyrics:** You will be asked if you want to delete old lyrics before adding new ones.
+1. **Open the web interface:** After running the program, Ctrl + click on the provided ip address on the CMD.
+2. **Select a folder:** Using the browse button select the folder containing the music files you want to process (note that for now this only works for folders located in the same parent directory as the .py program).
+3. **Delete Old Lyrics:** Using the radial menu select if you want to delete old lyrics before adding new ones.
    - **Yes:** Deletes old lyrics and adds new lyrics fetched from Genius.
    - **No:** Keeps existing lyrics and only adds new ones if they don't already exist.
-3. The script will scan the folder recursively and process all files.
+4. The script will scan the folder recursively and process all files.
