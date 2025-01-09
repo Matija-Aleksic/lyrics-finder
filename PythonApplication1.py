@@ -1,7 +1,7 @@
 import os
 import requests
 import music_tag
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
 from mutagen.easyid3 import EasyID3
 from mutagen.flac import FLAC
 from mutagen.id3 import ID3NoHeaderError
@@ -10,10 +10,16 @@ import eyed3
 import time
 import random
 from dotenv import load_dotenv
+from base import insert_song, get_all_songs, create_table
 
 load_dotenv()
 app = Flask(__name__)
+app.secret_key = os.urandom(24)
 CMDOutput = ""
+
+
+create_table()
+
 
 def get_metadata(filepath):
     global CMDOutput
@@ -45,9 +51,11 @@ def get_metadata(filepath):
         print(f"Error processing file: {filepath}\nDetails: {e}")
         return None
 
+
 def get_lyrics(artist, title):
     global CMDOutput
-    GENIUS_API_KEY = os.getenv("GENIUS_API_KEY")
+    GENIUS_API_KEY = "IZH7cNut75QpRsXf9Pyqnf-WBSCDmJKldwQjfvzLifboY6mIVRnBMiQIeJs21vQ6"
+    #GENIUS_API_KEY = os.getenv("GENIUS_API_KEY")
     if not GENIUS_API_KEY:
         raise ValueError("Genius API key not found. Set GENIUS_API_KEY environment variable.")
 
@@ -82,6 +90,7 @@ def get_lyrics(artist, title):
 
     return None
 
+
 def delete_lyrics(filepath):
     global CMDOutput
     try:
@@ -93,6 +102,7 @@ def delete_lyrics(filepath):
     except Exception as e:
         CMDOutput += f"Error deleting lyrics: {e}\n"
 
+
 def add_lyrics(filepath, lyrics):
     global CMDOutput
     try:
@@ -102,6 +112,7 @@ def add_lyrics(filepath, lyrics):
         CMDOutput += "Lyrics added successfully\n\n\n"
     except Exception as e:
         CMDOutput += f"Error adding lyrics: {e}\n"
+
 
 def scan_folder(folder_path, action_choice):
     global CMDOutput
@@ -117,6 +128,7 @@ def scan_folder(folder_path, action_choice):
                 if action_choice == "yes":
                     lyrics = get_lyrics(artist, title)
                     if lyrics:
+                        insert_song(artist, title, lyrics)  
                         delete_lyrics(filepath)
                         add_lyrics(filepath, lyrics)
                     else:
@@ -126,11 +138,28 @@ def scan_folder(folder_path, action_choice):
                         CMDOutput += "Old lyrics exist, skipping\n"
                     else:
                         lyrics = get_lyrics(artist, title)
-                        add_lyrics(filepath, lyrics)
+                        if lyrics:
+                            insert_song(artist, title, lyrics)  
+
+                            add_lyrics(filepath, lyrics)
+        
+        display_songs_from_db()
+
+def display_songs_from_db():
+    print("Songs stored in database: ")
+    songs = get_all_songs()
+    for song in songs:
+        print(f"Artist: {song[0]}, Title: {song[1]}")
+
+
+
+
 
 @app.route('/')
 def index():
+    message = request.args.get('message', '')
     return render_template('index.html')
+
 
 @app.route('/process_files', methods=['POST'])
 def process_files():
@@ -143,7 +172,11 @@ def process_files():
 
     action_choice = request.form['action_choice']
     scan_folder(folder_path, action_choice)
-    return jsonify({"status": "success", "message": "Files processed successfully."})
+
+    flash('Files processed successfully!')
+
+    return redirect(url_for('index', message="Files processed successfully."))
+
 
 @app.route('/get_message', methods=['GET'])
 def get_message():
@@ -151,6 +184,13 @@ def get_message():
     CMDPackage = CMDOutput
     CMDOutput = ""
     return jsonify({"message": CMDPackage})
+
+
+@app.route('/list_songs', methods=['GET'])
+def list_songs():
+    songs = get_all_songs()
+    return jsonify([{"artist": song[0], "title": song[1], "lyrics": song[2]} for song in songs])
+
 
 if __name__ == "__main__":
     app.run(debug=True)
