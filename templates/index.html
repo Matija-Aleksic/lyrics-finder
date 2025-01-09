@@ -1,29 +1,54 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark" style="color-scheme:dark">
-<head><meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-        <h1> LyricFinder</h1>
-         <style>
-         .container {
+<html lang="en" data-theme="dark" style="color-scheme: dark;">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <title>LyricFinder</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to right, #2c3e50, #4ca1af);
+            color: white;
+        }
+
+        .container {
             display: flex;
             height: 100vh;
         }
 
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
         .left-side {
             width: 50%;
-            padding: 20px;
-            overflow-y: auto;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.7);
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
         }
 
         .right-side {
             width: 50%;
             padding: 20px;
-            background-color: #000;
+            background: #111;
             color: #00FF00;
             font-family: monospace;
-            white-space: pre-wrap;
             overflow-y: auto;
+            border-left: 2px solid #555;
+        }
+
+        h3 {
+            margin-bottom: 20px;
+            font-size: 1.5rem;
         }
 
         #cmdOutput {
@@ -32,23 +57,56 @@
             color: #00FF00;
             padding: 10px;
             font-family: monospace;
+            border-radius: 5px;
             white-space: pre-wrap;
             overflow-y: scroll;
         }
 
-        #folderStatus {
+        button {
+            background: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        #loading {
+            display: none;
+            color: yellow;
+            font-size: 1.2em;
+            margin-top: 10px;
+        }
+
+        input[type="file"] {
+            display: block;
             margin-bottom: 20px;
         }
-         </style>
-</head>
 
+        label {
+            margin-right: 10px;
+            font-size: 1rem;
+        }
+
+        input[type="radio"] {
+            margin-right: 5px;
+        }
+    </style>
+</head>
 <body>
+    <div class="header">
+        LyricFinder
+    </div>
     <div class="container">
         <div class="left-side">
-	        <h3 id="folderStatus">Select a Folder</h3>
+            <h3 id="folderStatus">Select a Folder</h3>
             <input type="file" id="folderInput" webkitdirectory>
-
-            <br><br>
             <div id="radioGroup" style="display: none;">
                 <p>Delete old lyrics?</p>
                 <label>
@@ -57,15 +115,14 @@
                 <label>
                     <input type="radio" name="deleteLyrics" value="no" checked> No
                 </label>
-                <br><br>
                 <button id="confirmButton">Confirm</button>
             </div>
+            <div id="loading">Processing files, please wait...</div>
         </div>
         <div class="right-side">
             <div id="cmdOutput"></div>
         </div>
     </div>
-
 
     <script>
         const folderInput = document.getElementById('folderInput');
@@ -73,27 +130,18 @@
         const radioGroup = document.getElementById('radioGroup');
         const confirmButton = document.getElementById('confirmButton');
         const cmdOutput = document.getElementById('cmdOutput');
+        const loading = document.getElementById('loading');
 
-        let selectedFolder = ''
-        let folderPath = '';
+        let selectedFolder = '';
         let actionChoice = '';
+        let loadingInterval;
 
         function appendToCmdOutput(message) {
             const newMessage = document.createElement('div');
             newMessage.textContent = message;
-            const cmdOutput = document.getElementById('cmdOutput');
             cmdOutput.appendChild(newMessage);
             cmdOutput.scrollTop = cmdOutput.scrollHeight;
         }
-
-        /*fetch('/get_message')
-            .then(response => response.json())
-            .then(data => {
-                appendToCmdOutput(data.message);
-            })
-            .catch(error => {
-                console.error("Error fetching message:", error);
-            });*/
 
         folderInput.addEventListener('change', () => {
             if (folderInput.files.length > 0) {
@@ -103,48 +151,37 @@
             }
         });
 
-        document.querySelectorAll('input[name="deleteLyrics"]').forEach(radio => {
-            radio.addEventListener('change', () => {
-                actionChoice = radio.value;
-                console.log(`Delete old lyrics? ${actionChoice}`);
-            });
-        });
-
-        confirmButton.addEventListener('click', async () => 
-        {
+        confirmButton.addEventListener('click', async () => {
             const selectedRadio = document.querySelector('input[name="deleteLyrics"]:checked');
-            if (selectedRadio) 
-            {
-                actionChoice = selectedRadio.value;
-            }
-            if (selectedFolder && actionChoice) 
-            {
-                await fetch('/process_files', 
-                {
-                    method: 'POST',
-                    body: new URLSearchParams(
-                    {
-                        'folder_path': selectedFolder,
-                        'action_choice': actionChoice
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message);
-                })
-                .catch(error => {
-                    console.error("Error:", error);
-                });
+            actionChoice = selectedRadio ? selectedRadio.value : '';
+            if (selectedFolder && actionChoice) {
+                loading.style.display = "block";
+                let dotCount = 1;
+                loadingInterval = setInterval(() => {
+                    loading.textContent = "Processing files, please wait" + ".".repeat(dotCount);
+                    dotCount = dotCount % 3 + 1;
+                }, 500);
 
-                await fetch('/get_message')
-                .then(response => response.json())
-                .then(data => {
+                try {
+                    await fetch('/process_files', {
+                        method: 'POST',
+                        body: new URLSearchParams({
+                            'folder_path': selectedFolder,
+                            'action_choice': actionChoice
+                        })
+                    });
+
+                    const response = await fetch('/get_message');
+                    const data = await response.json();
                     appendToCmdOutput(data.message);
-                })
-            .catch(error => {
-                console.error("Error fetching message:", error);
-            });
-            } 
+                } catch (error) {
+                    console.error("Error:", error);
+                } finally {
+                    loading.style.display = "none";
+                    clearInterval(loadingInterval);
+                }
+            }
         });
     </script>
 </body>
+</html>
