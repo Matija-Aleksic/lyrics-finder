@@ -30,10 +30,13 @@ def get_metadata(filepath):
             artist = audio.get("artist", [""])[0]
             title = audio.get("title", [""])[0]
             mp3_file = eyed3.load(filepath)
-            old_lyrics = (
-                [frame.text for frame in mp3_file.tag.frame_set.get(b'USLT')]
-                if mp3_file and mp3_file.tag else None
-            )
+
+            if mp3_file and mp3_file.tag:
+                uslt_frames = mp3_file.tag.frame_set.get(b'USLT')
+                old_lyrics = [frame.text for frame in uslt_frames] if uslt_frames else None
+            else:
+                old_lyrics = None
+
         elif ext == ".flac":
             audio = FLAC(filepath)
             artist = audio.get("artist", [""])[0]
@@ -54,8 +57,7 @@ def get_metadata(filepath):
 
 def get_lyrics(artist, title):
     global CMDOutput
-    GENIUS_API_KEY = "IZH7cNut75QpRsXf9Pyqnf-WBSCDmJKldwQjfvzLifboY6mIVRnBMiQIeJs21vQ6"
-    #GENIUS_API_KEY = os.getenv("GENIUS_API_KEY")
+    GENIUS_API_KEY = os.getenv("GENIUS_API_KEY")
     if not GENIUS_API_KEY:
         raise ValueError("Genius API key not found. Set GENIUS_API_KEY environment variable.")
 
