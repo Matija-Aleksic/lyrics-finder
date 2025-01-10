@@ -54,3 +54,16 @@ def delete_all_songs():
     connection.commit()
 
     connection.close()
+
+
+def search_songs(query):
+    connection = sqlite3.connect("songs.db")
+    cursor = connection.cursor()
+    
+    query = f"%{query}%"
+    cursor.execute("""
+        SELECT artist, title, lyrics
+        FROM songs
+        WHERE artist LIKE ? OR title LIKE ? OR lyrics LIKE ?
+    """, (query, query, query))
+    return cursor.fetchall()

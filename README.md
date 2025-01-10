@@ -23,12 +23,11 @@ This Python script allows you to scan a folder of music files, retrieve song lyr
   - `eyed3`
   - `python-dotenv`
   - `flask`
-  - `base`
 
 You can install the necessary libraries with the following command:
 
 ```bash
-pip install requests music-tag mutagen beautifulsoup4 pyperclip eyed3 python-dotenv flask base
+pip install requests music-tag mutagen beautifulsoup4 pyperclip eyed3 python-dotenv flask
 ```
 
 ## Setting up the Genius API Key
