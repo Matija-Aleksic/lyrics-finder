@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Songs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #2c3e50;
+            color: white;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #1abc9c;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            width: 80%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 2px solid #3498db;
+            background-color: #34495e;
+            color: white;
+            font-size: 1rem;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #1abc9c;
+        }
+
+        button {
+            padding: 12px 25px;
+            background-color: #1abc9c;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #16a085;
+        }
+
+        .result-list {
+            margin-top: 30px;
+            list-style: none;
+            padding: 0;
+        }
+
+        .result-item {
+            background-color: #34495e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .result-item h2 {
+            color: #1abc9c;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .result-item pre {
+            color: #ecf0f1;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .no-results {
+            color: #e74c3c;
+            font-size: 1.2rem;
+        }
+
+        a {
+            color: #3498db;
+            text-decoration: none;
+            font-size: 1.1rem;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Search for Songs</h1>
+        <form method="POST">
+            <input type="text" name="query" placeholder="Search for a song" required>
+            <button type="submit">Search</button>
+        </form>
+
+        {% if query %}
+            {% if songs %}
+                <ul class="result-list">
+                    {% for song in songs %}
+                        <li class="result-item">
+                            <h2>{{ song[0] }} - {{ song[1] }}</h2>
+                            <pre>{{ song[2] }}</pre>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="no-results">No results found for "{{ query }}".</p>
+            {% endif %}
+        {% endif %}
+        
+        
+    </div>
+</body>
+</html>

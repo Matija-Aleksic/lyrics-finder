@@ -10,7 +10,7 @@ import eyed3
 import time
 import random
 from dotenv import load_dotenv
-from base import insert_song, get_all_songs, create_table
+from base import insert_song, get_all_songs, create_table, search_songs
 
 load_dotenv()
 app = Flask(__name__)
@@ -192,6 +192,22 @@ def get_message():
 def list_songs():
     songs = get_all_songs()
     return jsonify([{"artist": song[0], "title": song[1], "lyrics": song[2]} for song in songs])
+
+
+
+@app.route('/search', methods=['GET', 'POST'])
+def search():
+    if request.method == 'POST':
+        query = request.form['query'].strip() 
+        if query:  
+            results = search_songs(query) 
+            return render_template('search_results.html', songs=results, query=query)
+        else:
+            return render_template('search.html', message="Please enter a search query.") 
+    return render_template('search.html')  
+
+
+
 
 
 if __name__ == "__main__":
